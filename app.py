@@ -1,22 +1,47 @@
 import streamlit as st
 import pickle
-import nltk
-import os
-from nltk.data import find
 from nltk.stem.porter import PorterStemmer
 import string
 from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
 
-# ✅ Safe download for Streamlit Cloud
-def safe_download(resource):
-    try:
-        find(resource)
-    except LookupError:
-        nltk.download(resource.split("/")[-1])
+ps = PorterStemmer()
 
-safe_download("tokenizers/punkt")
-safe_download("corpora/stopwords")
+def transform_text(text):
+    text = text.lower()
+    text = text.split()  # ✅ Replacing nltk.word_tokenize with basic split
+
+    y = []
+    for i in text:
+        i = ''.join(char for char in i if char.isalnum())  # remove punctuations
+        if i and i not in stopwords.words('english'):
+            y.append(ps.stem(i))
+
+    return " ".join(y)
+
+# Load models
+tfidf = pickle.load(open('vectorizer.pkl', 'rb'))
+model = pickle.load(open('model.pkl', 'rb'))
+
+# UI
+st.title("📩 Email/SMS Spam Classifier")
+input_sms = st.text_area("Enter the message")
+
+if st.button('Predict'):
+    # 1. Preprocess
+    transformed_sms = transform_text(input_sms)
+
+    # 2. Vectorize
+    vector_input = tfidf.transform([transformed_sms])
+
+    # 3. Predict
+    result = model.predict(vector_input)[0]
+
+    # 4. Output
+    if result == 1:
+        st.header("❌ Spam")
+    else:
+        st.header("✅ Not Spam")
+
 
 def transform_text(text):
     text= text.lower()#to convert to lower case
