@@ -1,14 +1,22 @@
 import streamlit as st
 import pickle
 import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
+import os
+from nltk.data import find
 from nltk.stem.porter import PorterStemmer
 import string
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-ps = PorterStemmer()
 
+# ✅ Safe download for Streamlit Cloud
+def safe_download(resource):
+    try:
+        find(resource)
+    except LookupError:
+        nltk.download(resource.split("/")[-1])
+
+safe_download("tokenizers/punkt")
+safe_download("corpora/stopwords")
 
 def transform_text(text):
     text= text.lower()#to convert to lower case
